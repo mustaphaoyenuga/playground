@@ -1,0 +1,1 @@
+This is a character counter app built with Next.js, React, TypeScript, and Tailwind CSS.
