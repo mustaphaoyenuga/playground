@@ -58,10 +58,10 @@ git clone https://github.com/yourusername/playground.git
 
 # Install dependencies
 cd playground
-npm install
+pnpm install
 
 # Run development server
-npm run dev
+pnpm dev
 ```
 
 Visit `http://localhost:3000/` to see all projects.
