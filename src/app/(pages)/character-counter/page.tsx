@@ -1,24 +1,40 @@
 "use client"
 
-import { Moon, Sun } from "lucide-react";
+import { Info, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import Logo from "./components/Logo";
 import StatCard from "./components/StatCard";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 
 
 export default function CharacterCounter() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [text, setText] = useState("");
   const [excludeSpaces, setExcludeSpaces] = useState(false);
+  const [limitIsActive, setLimitIsActive] = useState(false);
+  const [characterLimit, setCharacterLimit] = useState(20);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
+    const { value } = e.target;
+    if (!limitIsActive) {
+      setText(value);
+    } else {
+      const slicedText = value.slice(0, characterLimit);
+      setText(slicedText);
+    }
   }
 
   const totalCharacters = excludeSpaces ? text.replace(/\s/g, '').length : text.length;
   const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
   const sentenceCount = text.trim() === '' ? 0 : text.trim().split(/[!?.]+/).filter(Boolean).length;
+
+  const handleCharacterLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCharacterLimit(Number(e.target.value));
+  }
+
+  const limitIsExceeded = limitIsActive ? totalCharacters >= characterLimit : false;
+
 
   return (
     <div className={isDarkMode ? "dark" : ""}>
@@ -30,16 +46,26 @@ export default function CharacterCounter() {
         <main className="max-w-4xl mx-auto">
           <h1 className="text-5xl font-bold max-w-2xl text-center mx-auto">Analyze your text in real-time</h1>
           <section className="space-y-4">
-            <textarea onChange={handleTextChange} value={text} className="w-full h-48 rounded-lg bg-muted p-2 resize-none"></textarea>
+            <div>
+              <textarea onChange={handleTextChange} placeholder="Start typing here...(or paste your text)" value={text} className={`w-full h-48 border-2 border-border rounded-lg p-2 resize-none ${limitIsExceeded ? "bg-red-50 border-red-500 outline-red-500" : "bg-muted"}`}></textarea>
+              {limitIsExceeded && (
+                <Alert variant="destructive" className="mt-1">
+                  <Info />
+                  <AlertTitle>Limit reached! Your text is {characterLimit} characters.</AlertTitle>
+                </Alert>
+                )}
+            </div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={excludeSpaces} onChange={() => setExcludeSpaces(!excludeSpaces)} />
                 <span className="text-sm">Exclude spaces</span>
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" />
+                <input type="checkbox" checked={limitIsActive} onChange={() => setLimitIsActive(!limitIsActive)} />
                 <span className="text-sm">Set character limit</span>
               </div>
+              {limitIsActive && <input type="number" value={characterLimit} onChange={handleCharacterLimitChange} placeholder="Limit" className="border border-border rounded-lg px-2 py-1 w-24" />}
+
               <div className="ml-auto">
                 Approx. reading time: <span>0</span>
               </div>
