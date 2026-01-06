@@ -6,6 +6,8 @@ import Logo from "./components/Logo";
 import StatCard from "./components/StatCard";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 
 export default function CharacterCounter() {
@@ -20,8 +22,11 @@ export default function CharacterCounter() {
     if (!limitIsActive) {
       setText(value);
     } else {
-      const slicedText = value.slice(0, characterLimit);
-      setText(slicedText);
+      const characterCount = excludeSpaces ? value.replace(/\s/g, '').length : value.length;
+
+      if (characterCount <= characterLimit) {
+        setText(value);
+      }
     }
   }
 
@@ -38,23 +43,25 @@ export default function CharacterCounter() {
 
   return (
     <div className={isDarkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-background text-foreground">
-        <header className="flex items-center justify-between max-w-5xl mx-auto">
+      <div className="min-h-screen bg-background text-foreground transition-colors duration-300 p-4 md:p-6 font-sans">
+        <header className="flex items-center justify-between max-w-3xl mx-auto mb-12">
           <Logo />
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className="cursor-pointer">{isDarkMode ? <Moon /> : <Sun />}</button>
+          <Button size="icon" variant="secondary" onClick={() => setIsDarkMode(!isDarkMode)} className="cursor-pointer">{isDarkMode ? <Moon size={20} /> : <Sun size={20} />}</Button>
         </header>
-        <main className="max-w-4xl mx-auto">
-          <h1 className="text-5xl font-bold max-w-2xl text-center mx-auto">Analyze your text in real-time</h1>
+        <main className="max-w-3xl mx-auto space-y-8">
+          <h1 className="text-4xl md:text-5xl font-bold leading-tight text-center mb-10">Analyze your text in real-time</h1>
+
           <section className="space-y-4">
             <div>
-              <textarea onChange={handleTextChange} placeholder="Start typing here...(or paste your text)" value={text} className={`w-full h-48 border-2 border-border rounded-lg p-2 resize-none ${limitIsExceeded ? "bg-red-50 border-red-500 outline-red-500" : "bg-muted"}`}></textarea>
-              {limitIsExceeded && (
-                <Alert variant="destructive" className="mt-1">
-                  <Info />
-                  <AlertTitle>Limit reached! Your text is {characterLimit} characters.</AlertTitle>
-                </Alert>
-                )}
+              <Textarea className={`h-48 md:h-52 bg-muted resize-none ${limitIsExceeded ? "bg-red-50 dark:bg-red-800/5 border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20": ""}`} onChange={handleTextChange} placeholder="Start typing here...(or paste your text)" value={text} />
+
+                <p className={`mt-4 flex items-center gap-2 text-destructive text-sm ${limitIsExceeded ? "visible": "invisible"}`}>
+                  <Info size={16} />
+                  <span>Limit reached! Your text is {characterLimit} characters.</span>
+                </p>
+         
             </div>
+            
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={excludeSpaces} onChange={() => setExcludeSpaces(!excludeSpaces)} />
@@ -66,16 +73,16 @@ export default function CharacterCounter() {
               </div>
               {limitIsActive && <input type="number" value={characterLimit} onChange={handleCharacterLimitChange} placeholder="Limit" className="border border-border rounded-lg px-2 py-1 w-24" />}
 
-              <div className="ml-auto">
+              <div className="ml-auto text-sm">
                 Approx. reading time: <span>0</span>
               </div>
             </div>
           </section>
 
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
-            <StatCard count={String(totalCharacters).padStart(2, '0')} label="Total Characters" className="bg-purple-400" />
-            <StatCard count={String(wordCount).padStart(2, '0')} label="Word Count" className="bg-orange-400/90" />
-            <StatCard count={String(sentenceCount).padStart(2, '0')} label="Sentence Count" className="bg-red-400/90" />
+            <StatCard count={totalCharacters} label="Total Characters" className="bg-purple-400 transition-colors duration-300" />
+            <StatCard count={wordCount} label="Word Count" className="bg-orange-400/90 transition-colors duration-300" />
+            <StatCard count={sentenceCount} label="Sentence Count" className="bg-red-400/90 transition-colors duration-300" />
           </section>
 
           <section>
