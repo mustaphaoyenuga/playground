@@ -5,7 +5,6 @@ import { useState } from "react";
 import Logo from "./components/Logo";
 import StatCard from "./components/StatCard";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -17,29 +16,26 @@ export default function CharacterCounter() {
   const [limitIsActive, setLimitIsActive] = useState(false);
   const [characterLimit, setCharacterLimit] = useState(20);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { value } = e.target;
-    if (!limitIsActive) {
-      setText(value);
-    } else {
-      const characterCount = excludeSpaces ? value.replace(/\s/g, '').length : value.length;
 
-      if (characterCount <= characterLimit) {
-        setText(value);
-      }
-    }
+  let characterCount = text.length;
+  if (excludeSpaces) {
+    characterCount = text.replace(/\s/g, '').length;
   }
-
-  const totalCharacters = excludeSpaces ? text.replace(/\s/g, '').length : text.length;
   const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
   const sentenceCount = text.trim() === '' ? 0 : text.trim().split(/[!?.]+/).filter(Boolean).length;
+
+  const limitIsExceeded = limitIsActive && characterCount > characterLimit;
+
+  const timeInMinutes = wordCount / 200
+  const readingTime = timeInMinutes < 1 ? "<1 minute" : `~${Math.ceil(timeInMinutes)} mins`
+
+   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value)
+  }
 
   const handleCharacterLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCharacterLimit(Number(e.target.value));
   }
-
-  const limitIsExceeded = limitIsActive ? totalCharacters >= characterLimit : false;
-
 
   return (
     <div className={isDarkMode ? "dark" : ""}>
@@ -53,15 +49,15 @@ export default function CharacterCounter() {
 
           <section className="space-y-4">
             <div>
-              <Textarea className={`h-48 md:h-52 bg-muted resize-none ${limitIsExceeded ? "bg-red-50 dark:bg-red-800/5 border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20": ""}`} onChange={handleTextChange} placeholder="Start typing here...(or paste your text)" value={text} />
+              <Textarea className={`h-48 md:h-52 bg-muted resize-none ${limitIsExceeded ? "bg-red-50 dark:bg-red-800/5 border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20" : ""}`} onChange={handleTextChange} placeholder="Start typing here...(or paste your text)" value={text} />
 
-                <p className={`mt-4 flex items-center gap-2 text-destructive text-sm ${limitIsExceeded ? "visible": "invisible"}`}>
-                  <Info size={16} />
-                  <span>Limit reached! Your text is {characterLimit} characters.</span>
-                </p>
-         
+              <p className={`mt-4 flex items-center gap-2 text-destructive text-sm ${limitIsExceeded ? "visible" : "invisible"}`}>
+                <Info size={16} />
+                <span>Limit reached! Your text is {characterLimit} characters.</span>
+              </p>
+
             </div>
-            
+
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={excludeSpaces} onChange={() => setExcludeSpaces(!excludeSpaces)} />
@@ -74,13 +70,13 @@ export default function CharacterCounter() {
               {limitIsActive && <input type="number" value={characterLimit} onChange={handleCharacterLimitChange} placeholder="Limit" className="border border-border rounded-lg px-2 py-1 w-24" />}
 
               <div className="ml-auto text-sm">
-                Approx. reading time: <span>0</span>
+                Approx. reading time: <span>{readingTime}</span>
               </div>
             </div>
           </section>
 
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
-            <StatCard count={totalCharacters} label="Total Characters" className="bg-purple-400 transition-colors duration-300" />
+            <StatCard count={characterCount} label="Total Characters" className="bg-purple-400 transition-colors duration-300" />
             <StatCard count={wordCount} label="Word Count" className="bg-orange-400/90 transition-colors duration-300" />
             <StatCard count={sentenceCount} label="Sentence Count" className="bg-red-400/90 transition-colors duration-300" />
           </section>
