@@ -29,13 +29,31 @@ export default function CharacterCounter() {
   const timeInMinutes = wordCount / 200
   const readingTime = timeInMinutes < 1 ? "<1 minute" : `~${Math.ceil(timeInMinutes)} mins`
 
-   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value)
   }
 
   const handleCharacterLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCharacterLimit(Number(e.target.value));
   }
+
+  let letterDensity: { char: string; count: number; percentage: string }[] = [];
+  if (!text) {
+    letterDensity = [];
+  } else {
+    const textArray = text.replace(/\s/g, '').toLowerCase().split('');
+    const objectDensity = textArray.reduce((acc, char) => {
+      acc[char] = (acc[char] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>)
+
+    letterDensity = Object.entries(objectDensity).map(([char, count]) => ({
+      char,
+      count,
+      percentage: ((count / textArray.length) * 100).toFixed(2)
+    }))
+  }
+
 
   return (
     <div className={isDarkMode ? "dark" : ""}>
@@ -83,11 +101,19 @@ export default function CharacterCounter() {
 
           <section>
             <h2>Letter Density</h2>
-            <div className="flex items-center gap-4">
-              <span>E</span>
-              <Progress value={16.06} className="flex-1" />
-              <span>40 (16.06%)</span>
-            </div>
+            {letterDensity.length === 0 ? (
+              <p>No characters found. Start typing to see letter density.</p>
+            ) : (
+              <div className="space-y-3">
+                {letterDensity.map(({ char, count, percentage }) => (
+                  <div key={char} className="flex items-center gap-4">
+                    <span>{char}</span>
+                    <Progress value={Number(percentage)} className="flex-1" />
+                    <span>{count} ({percentage}%)</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </main>
       </div>
