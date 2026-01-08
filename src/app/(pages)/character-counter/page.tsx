@@ -1,6 +1,6 @@
 "use client"
 
-import { Info, Moon, Sun } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import Logo from "./components/Logo";
 import StatCard from "./components/StatCard";
@@ -21,7 +21,7 @@ const calculateLetterDensity = (text: string) => {
     char,
     count,
     percentage: ((count / textArray.length) * 100).toFixed(2)
-  })) 
+  })).sort((a, b) => b.count - a.count)
 }
 
 const calculateReadingTime = (wordCount: number) => {
@@ -36,6 +36,7 @@ export default function CharacterCounter() {
   const [excludeSpaces, setExcludeSpaces] = useState(false);
   const [limitIsActive, setLimitIsActive] = useState(false);
   const [characterLimit, setCharacterLimit] = useState(20);
+  const [showAllLetters, setShowAllLetters] = useState(false);
 
 
   const characterCount = excludeSpaces ? text.replace(/\s/g, '').length : text.length;
@@ -43,6 +44,7 @@ export default function CharacterCounter() {
   const sentenceCount = text.trim() === '' ? 0 : text.trim().split(/[!?.]+/).filter(Boolean).length;
   const readingTime = calculateReadingTime(wordCount);
   const letterDensity = calculateLetterDensity(text);
+  const visibleLetterDensity = showAllLetters ? letterDensity : letterDensity.slice(0, 5);
   const limitIsExceeded = limitIsActive && characterCount > characterLimit;
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -53,13 +55,17 @@ export default function CharacterCounter() {
     setCharacterLimit(Number(e.target.value));
   }
 
+  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+  const toggleExcludeSpaces = () => setExcludeSpaces(!excludeSpaces);
+  const toggleLimitIsActive = () => setLimitIsActive(!limitIsActive);
+  const toggleShowAllLetters = () => setShowAllLetters(!showAllLetters);
 
   return (
     <div className={isDarkMode ? "dark" : ""}>
       <div className="min-h-screen bg-background text-foreground transition-colors duration-300 p-4 md:p-6 font-sans">
         <header className="flex items-center justify-between max-w-3xl mx-auto mb-12">
           <Logo />
-          <Button size="icon" variant="secondary" onClick={() => setIsDarkMode(!isDarkMode)} className="cursor-pointer">{isDarkMode ? <Moon size={20} /> : <Sun size={20} />}</Button>
+          <Button size="icon" variant="secondary" onClick={toggleDarkMode} className="cursor-pointer">{isDarkMode ? <Moon size={20} /> : <Sun size={20} />}</Button>
         </header>
         <main className="max-w-3xl mx-auto space-y-8">
           <h1 className="text-4xl md:text-5xl font-bold leading-tight text-center mb-10">Analyze your text in real-time</h1>
@@ -77,11 +83,11 @@ export default function CharacterCounter() {
 
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
-                <input type="checkbox" checked={excludeSpaces} onChange={() => setExcludeSpaces(!excludeSpaces)} />
+                <input type="checkbox" checked={excludeSpaces} onChange={toggleExcludeSpaces} />
                 <span className="text-sm">Exclude spaces</span>
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" checked={limitIsActive} onChange={() => setLimitIsActive(!limitIsActive)} />
+                <input type="checkbox" checked={limitIsActive} onChange={toggleLimitIsActive} />
                 <span className="text-sm">Set character limit</span>
               </div>
               {limitIsActive && <input type="number" value={characterLimit} onChange={handleCharacterLimitChange} placeholder="Limit" className="border border-border rounded-lg px-2 py-1 w-24" />}
@@ -99,19 +105,29 @@ export default function CharacterCounter() {
           </section>
 
           <section>
-            <h2>Letter Density</h2>
+            <h2 className="text-xl font-semibold">Letter Density</h2>
             {letterDensity.length === 0 ? (
               <p>No characters found. Start typing to see letter density.</p>
             ) : (
               <div className="space-y-3">
-                {letterDensity.map(({ char, count, percentage }) => (
+                {visibleLetterDensity.map(({ char, count, percentage }) => (
                   <div key={char} className="flex items-center gap-4">
-                    <span>{char}</span>
+                    <span className="w-4 font-bold">{char}</span>
                     <Progress value={Number(percentage)} className="flex-1" />
-                    <span>{count} ({percentage}%)</span>
+                    <div className="w-20 gap-1.5 flex justify-end text-sm">
+                      <span>{count}</span>
+                      <span>({percentage}%)</span>
+                    </div>
                   </div>
                 ))}
               </div>
+            )}
+
+            {letterDensity.length > 5 && (
+              <Button variant="ghost" size="sm" onClick={toggleShowAllLetters}>
+                {showAllLetters ? "See less" : "See more"}
+                {showAllLetters ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+              </Button>
             )}
           </section>
         </main>
