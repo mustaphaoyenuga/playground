@@ -8,6 +8,27 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
+const calculateLetterDensity = (text: string) => {
+  if (!text) return [];
+
+  const textArray = text.replace(/\s/g, '').toUpperCase().split('');
+  const charFrequency = textArray.reduce((acc, char) => {
+    acc[char] = (acc[char] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return Object.entries(charFrequency).map(([char, count]) => ({
+    char,
+    count,
+    percentage: ((count / textArray.length) * 100).toFixed(2)
+  })) 
+}
+
+const calculateReadingTime = (wordCount: number) => {
+  const timeInMinutes = wordCount / 200;
+  return timeInMinutes < 1 ? "<1 minute" : `~${Math.ceil(timeInMinutes)} mins`
+}
+
 
 export default function CharacterCounter() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -17,17 +38,12 @@ export default function CharacterCounter() {
   const [characterLimit, setCharacterLimit] = useState(20);
 
 
-  let characterCount = text.length;
-  if (excludeSpaces) {
-    characterCount = text.replace(/\s/g, '').length;
-  }
+  const characterCount = excludeSpaces ? text.replace(/\s/g, '').length : text.length;
   const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
   const sentenceCount = text.trim() === '' ? 0 : text.trim().split(/[!?.]+/).filter(Boolean).length;
-
+  const readingTime = calculateReadingTime(wordCount);
+  const letterDensity = calculateLetterDensity(text);
   const limitIsExceeded = limitIsActive && characterCount > characterLimit;
-
-  const timeInMinutes = wordCount / 200
-  const readingTime = timeInMinutes < 1 ? "<1 minute" : `~${Math.ceil(timeInMinutes)} mins`
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value)
@@ -35,23 +51,6 @@ export default function CharacterCounter() {
 
   const handleCharacterLimitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCharacterLimit(Number(e.target.value));
-  }
-
-  let letterDensity: { char: string; count: number; percentage: string }[] = [];
-  if (!text) {
-    letterDensity = [];
-  } else {
-    const textArray = text.replace(/\s/g, '').toLowerCase().split('');
-    const objectDensity = textArray.reduce((acc, char) => {
-      acc[char] = (acc[char] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>)
-
-    letterDensity = Object.entries(objectDensity).map(([char, count]) => ({
-      char,
-      count,
-      percentage: ((count / textArray.length) * 100).toFixed(2)
-    }))
   }
 
 
